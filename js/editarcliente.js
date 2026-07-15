@@ -1,7 +1,7 @@
 (function() {
 
     let DB;
-    let idCliente
+    let idCliente;
 
     const nombreInput = document.querySelector('#nombre');
     const emailInput = document.querySelector('#email');
@@ -11,37 +11,42 @@
     const formulario = document.querySelector('#formulario');
 
     document.addEventListener('DOMContentLoaded', () => {
-        conectarDB();
-
-        //Actualizar el registro de cliente
-        formulario.addEventListener( 'submit', actualizarCliente );
-
         //Verificar si hay un ID en la URL
         const parametrosURL = new URLSearchParams(window.location.search);
         idCliente = parametrosURL.get('id');
-        
-        if(idCliente) {
-            setTimeout(() => {
-                obtenerCliente(idCliente);
-            }, 1000);
-        }
+
+        conectarDB();
+
+        //Actualizar el registro de cliente
+        formulario.addEventListener('submit', actualizarCliente);
     });
 
     function actualizarCliente(e) {
         e.preventDefault();
 
+        const nombre = nombreInput.value.trim();
+        const email = emailInput.value.trim();
+        const telefono = telefonoInput.value.trim();
+        const empresa = empresaInput.value.trim();
+
         //Validar campos del formulario
-        if(nombreInput.value === '' || emailInput.value === '' || telefonoInput.value === '' || empresaInput.value === '') {
+        if(nombre === '' || email === '' || telefono === '' || empresa === '') {
             imprimirAlerta('Todos los campos son obligatorios', 'error');
+            return;
+        }
+
+        const regexEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if(!regexEmail.test(email)) {
+            imprimirAlerta('El correo no tiene un formato valido', 'error');
             return;
         }
 
         //Actualizar el cliente
         const clienteActualizado = {
-            nombre: nombreInput.value,
-            email: emailInput.value,
-            telefono: telefonoInput.value,
-            empresa: empresaInput.value,
+            nombre,
+            email,
+            telefono,
+            empresa,
             id: Number(idCliente)
         }
 
@@ -66,19 +71,17 @@
         const transaction = DB.transaction(['crm'], 'readonly');
         const objectStore = transaction.objectStore('crm');
 
-        const cliente = objectStore.openCursor();
-        cliente.onsuccess = function(e) {
-            const cursor = e.target.result;
+        const peticion = objectStore.get(Number(id));
 
-            if(cursor) {
-                if(cursor.value.id === Number(id)) {
-                    llenarFormulario(cursor.value);
-                    return;
-                }
-                cursor.continue();
+        peticion.onsuccess = function() {
+            if(peticion.result) {
+                llenarFormulario(peticion.result);
             }
-        }
+        };
 
+        peticion.onerror = function() {
+            console.error('Error al obtener el cliente');
+        };
     }
 
     function llenarFormulario(datosCliente) {
@@ -88,9 +91,8 @@
         empresaInput.value = empresa;
         emailInput.value = email;
         telefonoInput.value = telefono;
-        
     }
-    
+
     function conectarDB() {
         const abrirConexion = window.indexedDB.open('crm', 1);
 
@@ -99,8 +101,12 @@
         }
 
         abrirConexion.onsuccess = function() {
-            console.log('Conexión a la base de datos establecida correctamente');
+            console.log('Conexion a la base de datos establecida correctamente');
             DB = abrirConexion.result;
+
+            if(idCliente) {
+                obtenerCliente(idCliente);
+            }
         }
     }
 })();
