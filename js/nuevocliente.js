@@ -12,13 +12,19 @@
         e.preventDefault();
 
         //Leer los inputs del formulario
-        const nombre = document.querySelector('#nombre').value;
-        const email = document.querySelector('#email').value;
-        const telefono = document.querySelector('#telefono').value;
-        const empresa = document.querySelector('#empresa').value;
+        const nombre = document.querySelector('#nombre').value.trim();
+        const email = document.querySelector('#email').value.trim();
+        const telefono = document.querySelector('#telefono').value.trim();
+        const empresa = document.querySelector('#empresa').value.trim();
 
         if(nombre === '' || email === '' || telefono === '' || empresa === '') {
             imprimirAlerta('Todos los campos son obligatorios', 'error');
+            return;
+        }
+
+        const regexEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if(!regexEmail.test(email)) {
+            imprimirAlerta('El correo no tiene un formato valido', 'error');
             return;
         }
 
@@ -29,8 +35,6 @@
             telefono,
             empresa
         }
-
-        cliente.id = Date.now(); // Asignar un ID único basado en la fecha actual
 
         crearNuevoCliente(cliente);
     }
@@ -49,9 +53,8 @@
             imprimirAlerta('Cliente agregado correctamente');
 
             setTimeout(() => {
-                window.location.href = 'index.html'; // Redirigir a la página principal después de agregar el cliente
+                window.location.href = 'index.html'; // Redirigir a la pagina principal despues de agregar el cliente
             }, 3000);
         }
     }
-
 })();
