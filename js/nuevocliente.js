@@ -8,6 +8,18 @@
         formulario.addEventListener('submit', validarCliente);
     });
 
+    function conectarDB() {
+        const abrirConexion = window.indexedDB.open('crm', 1);
+
+        abrirConexion.onerror = function() {
+            console.error('Error al conectar a la base de datos');
+        }
+
+        abrirConexion.onsuccess = function() {
+            DB = abrirConexion.result;
+        }
+    }
+
     function validarCliente(e) {
         e.preventDefault();
 
